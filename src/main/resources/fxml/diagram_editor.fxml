@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.diagramme.ui.DiagramEditorController"
+            prefHeight="800.0" prefWidth="1280.0">
+
+    <top>
+        <ToolBar>
+            <ToggleButton fx:id="selectionButton" text="Sélection" selected="true" />
+            <ToggleButton fx:id="addClassButton" text="Ajouter Classe" />
+            <ToggleButton fx:id="addInterfaceButton" text="Ajouter Interface" />
+            <ToggleButton fx:id="addRelationshipButton" text="Ajouter Relation" />
+            <Separator orientation="VERTICAL" />
+            <Button text="Zoom+" onAction="#zoomIn" />
+            <Button text="Zoom-" onAction="#zoomOut" />
+            <Button text="Zoom 100%" onAction="#resetZoom" />
+            <Separator orientation="VERTICAL" />
+            <CheckBox text="Grille" selected="true" onAction="#toggleGrid" />
+            <CheckBox text="Aligner" selected="true" onAction="#toggleSnapToGrid" />
+            <Separator orientation="VERTICAL" />
+            <Button text="Optimiser" onAction="#optimizeLayout" />
+        </ToolBar>
+    </top>
+
+    <center>
+        <ScrollPane fx:id="scrollPane" hbarPolicy="ALWAYS" vbarPolicy="ALWAYS">
+            <Pane fx:id="diagramCanvas" styleClass="workspace" />
+        </ScrollPane>
+    </center>
+
+</BorderPane>

@@ -1,0 +1,89 @@
+/* Style spécifique pour les éléments de classe */
+
+.class-element {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 1);
+}
+
+.class-title {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-background-color: #2c3e50;
+    -fx-text-fill: white;
+}
+
+.class-attributes {
+    -fx-padding: 5px;
+    -fx-spacing: 2px;
+}
+
+.class-methods {
+    -fx-padding: 5px;
+    -fx-spacing: 2px;
+}
+
+.attribute-label {
+    -fx-font-family: monospace;
+}
+
+.method-label {
+    -fx-font-family: monospace;
+}
+
+.abstract-class .class-title {
+    -fx-font-style: italic;
+}
+
+.interface-element .class-title {
+    -fx-background-color: #3498db;
+}
+
+.enum-element .class-title {
+    -fx-background-color: #e74c3c;
+}
+
+.selected-element {
+    -fx-border-color: #1abc9c;
+    -fx-border-width: 2px;
+}
+
+/* Style pour les différents types de relations */
+.inheritance-relation {
+    -fx-stroke: #2c3e50;
+    -fx-stroke-width: 1.5;
+}
+
+.implementation-relation {
+    -fx-stroke: #2c3e50;
+    -fx-stroke-width: 1.5;
+    -fx-stroke-dash-array: 5 5;
+}
+
+.association-relation {
+    -fx-stroke: #3498db;
+    -fx-stroke-width: 1.5;
+}
+
+.aggregation-relation {
+    -fx-stroke: #e67e22;
+    -fx-stroke-width: 1.5;
+}
+
+.composition-relation {
+    -fx-stroke: #e74c3c;
+    -fx-stroke-width: 1.5;
+}
+
+.dependency-relation {
+    -fx-stroke: #95a5a6;
+    -fx-stroke-width: 1.5;
+    -fx-stroke-dash-array: 5 5;
+}
+
+.relationship-label {
+    -fx-font-size: 12px;
+    -fx-background-color: rgba(255, 255, 255, 0.8);
+    -fx-padding: 2px;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}

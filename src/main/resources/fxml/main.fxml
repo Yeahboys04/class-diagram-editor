@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.diagramme.ui.MainController"
+            prefHeight="800.0" prefWidth="1280.0">
+
+    <top>
+        <VBox>
+            <!-- Barre de menu -->
+            <MenuBar>
+                <Menu text="Fichier">
+                    <MenuItem text="Nouveau diagramme" onAction="#onNewDiagram" accelerator="Ctrl+N" />
+                    <MenuItem text="Ouvrir..." onAction="#onOpenDiagram" accelerator="Ctrl+O" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Enregistrer" onAction="#onSaveDiagram" accelerator="Ctrl+S" />
+                    <MenuItem text="Enregistrer sous..." onAction="#onSaveAsDiagram" accelerator="Ctrl+Shift+S" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Exporter..." onAction="#onExportDiagram" />
+                    <MenuItem text="Importer..." onAction="#onImportDiagram" />
+                    <SeparatorMenuItem />
+                    <Menu text="Projets récents" fx:id="recentProjectsMenu">
+                        <fx:define>
+                            <ToggleGroup fx:id="recentProjectsGroup" />
+                        </fx:define>
+                        <!-- Les projets récents seront ajoutés dynamiquement -->
+                    </Menu>
+                    <SeparatorMenuItem />
+                    <MenuItem text="Préférences..." onAction="#onOpenPreferences" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Quitter" onAction="#onQuitApplication" accelerator="Ctrl+Q" />
+                </Menu>
+
+                <Menu text="Édition">
+                    <MenuItem fx:id="undoMenuItem" text="Annuler" onAction="#onUndo" accelerator="Ctrl+Z" />
+                    <MenuItem fx:id="redoMenuItem" text="Rétablir" onAction="#onRedo" accelerator="Ctrl+Y" />
+                    <MenuItem fx:id="saveMenuItem" text="Enregistrer" onAction="#onSaveDiagram" accelerator="Ctrl+S" />
+                    <MenuItem fx:id="saveAsMenuItem" text="Enregistrer sous..." onAction="#onSaveAsDiagram" accelerator="Ctrl+Shift+S" />
+                    <MenuItem fx:id="exportMenuItem" text="Exporter..." onAction="#onExportDiagram" />
+                    <MenuItem fx:id="closeMenuItem" text="Fermer" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Couper" onAction="#onCut" accelerator="Ctrl+X" />
+                    <MenuItem text="Copier" onAction="#onCopy" accelerator="Ctrl+C" />
+                    <MenuItem text="Coller" onAction="#onPaste" accelerator="Ctrl+V" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Supprimer" onAction="#onDelete" accelerator="Delete" />
+                    <MenuItem text="Sélectionner tout" onAction="#onSelectAll" accelerator="Ctrl+A" />
+                </Menu>
+
+                <Menu text="Diagramme">
+                    <MenuItem text="Ajouter une classe" onAction="#onAddClass" />
+                    <MenuItem text="Ajouter une interface" onAction="#onAddInterface" />
+                    <MenuItem text="Ajouter une énumération" onAction="#onAddEnum" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Ajouter une relation" onAction="#onAddRelationship" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Générer depuis code Java..." onAction="#onGenerateFromCode" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Propriétés du diagramme..." onAction="#onDiagramProperties" />
+                </Menu>
+
+                <Menu text="Vue">
+                    <MenuItem text="Zoom avant" onAction="#onZoomIn" accelerator="Ctrl+Plus" />
+                    <MenuItem text="Zoom arrière" onAction="#onZoomOut" accelerator="Ctrl+Minus" />
+                    <MenuItem text="Réinitialiser le zoom" onAction="#onZoomReset" accelerator="Ctrl+0" />
+                    <SeparatorMenuItem />
+                    <CheckMenuItem text="Afficher la grille" fx:id="showGridMenuItem" selected="true" onAction="#onToggleGrid" />
+                    <CheckMenuItem text="Aligner sur la grille" fx:id="snapToGridMenuItem" selected="true" onAction="#onToggleSnapToGrid" />
+                    <SeparatorMenuItem />
+                    <Menu text="Thèmes">
+                        <items>
+                            <RadioMenuItem text="Clair" userData="light">
+                                <toggleGroup>
+                                    <ToggleGroup fx:id="themeToggleGroup"/>
+                                </toggleGroup>
+                            </RadioMenuItem>
+                            <RadioMenuItem text="Sombre" userData="dark" toggleGroup="$themeToggleGroup"/>
+                        </items>
+                    </Menu>
+                </Menu>
+
+                <Menu text="Outils">
+                    <MenuItem text="Vérifier la validité UML" onAction="#onCheckUmlValidity" />
+                    <MenuItem text="Optimiser la disposition" onAction="#onOptimizeLayout" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Générer code Java..." onAction="#onGenerateJavaCode" />
+                </Menu>
+
+                <Menu text="Aide">
+                    <MenuItem text="Documentation" onAction="#onShowDocumentation" />
+                    <MenuItem text="Raccourcis clavier" onAction="#onShowKeyboardShortcuts" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="À propos" onAction="#onShowAbout" />
+                </Menu>
+            </MenuBar>
+
+            <!-- Barre d'outils -->
+            <ToolBar styleClass="tool-bar">
+                <Button fx:id="newDiagramButton" text="Nouveau" onAction="#onNewDiagram" />
+                <Button fx:id="openDiagramButton" text="Ouvrir" onAction="#onOpenDiagram" />
+                <Button fx:id="saveDiagramButton" text="Enregistrer" onAction="#onSaveDiagram" />
+                <Separator orientation="VERTICAL" />
+                <Button fx:id="undoButton" text="Annuler" onAction="#onUndo" />
+                <Button fx:id="redoButton" text="Rétablir" onAction="#onRedo" />
+                <Separator orientation="VERTICAL" />
+                <Button fx:id="addClass" text="Classe" onAction="#onAddClass" />
+                <Button fx:id="addInterface" text="Interface" onAction="#onAddInterface" />
+                <Button fx:id="addRelationship" text="Relation" onAction="#onAddRelationship" />
+                <Separator orientation="VERTICAL" />
+                <Button fx:id="exportButton" text="Exporter" onAction="#onExportDiagram" />
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <center>
+        <TabPane fx:id="diagramTabPane" tabClosingPolicy="ALL_TABS" />
+    </center>
+
+    <right>
+        <VBox fx:id="propertiesPanel" prefWidth="300.0" styleClass="side-panel">
+            <Label text="Propriétés" styleClass="title" />
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                <VBox fx:id="propertiesContent" spacing="10.0" />
+            </ScrollPane>
+        </VBox>
+    </right>
+
+    <left>
+        <VBox fx:id="explorerPanel" prefWidth="250.0" styleClass="side-panel">
+            <Label text="Explorateur" styleClass="title" />
+            <TreeView fx:id="diagramExplorer" VBox.vgrow="ALWAYS" />
+        </VBox>
+    </left>
+
+    <bottom>
+        <HBox fx:id="statusBar" spacing="10.0" alignment="CENTER_LEFT" style="-fx-padding: 5px; -fx-background-color: #ecf0f1;">
+            <Label fx:id="statusLabel" text="Prêt" HBox.hgrow="ALWAYS" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="zoomLabel" text="Zoom: 100%" />
+        </HBox>
+    </bottom>
+
+</BorderPane>
