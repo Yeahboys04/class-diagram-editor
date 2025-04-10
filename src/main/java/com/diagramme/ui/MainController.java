@@ -1,10 +1,13 @@
 package com.diagramme.ui;
 
+import javafx.scene.control.TreeItem;
+import java.util.HashMap;
+import java.util.Map;
+
+
+import com.diagramme.dto.RecentDiagramDTO;
 import com.diagramme.model.ClassDiagram;
-import com.diagramme.service.DiagramService;
-import com.diagramme.service.ExportService;
-import com.diagramme.service.ImportService;
-import com.diagramme.service.PreferenceService;
+import com.diagramme.service.*;
 import com.diagramme.ui.dialog.AboutDialog;
 import com.diagramme.ui.dialog.DiagramPropertiesDialog;
 import com.diagramme.ui.dialog.ExportDialog;
@@ -34,6 +37,8 @@ import java.util.List;
 import java.util.Optional;
 
 import javafx.scene.Scene;
+
+
 
 /**
  * Contrôleur principal de l'application
@@ -71,6 +76,7 @@ public class MainController {
     private final ImportService importService;
     private final ExportService exportService;
     private final PreferenceService preferenceService;
+    private final Map<String, Long> diagramNameToIdMap = new HashMap<>();
 
     // Propriétés de l'application
     private final BooleanProperty hasOpenDiagram = new SimpleBooleanProperty(false);
@@ -151,10 +157,15 @@ public class MainController {
         TreeItem<String> rootItem = new TreeItem<>("Diagrammes");
         rootItem.setExpanded(true);
 
+        // Vider la map existante
+        diagramNameToIdMap.clear();
+
         // Charger les diagrammes existants
         List<ClassDiagram> diagrams = diagramService.getAllDiagrams();
         for (ClassDiagram diagram : diagrams) {
             TreeItem<String> diagramItem = new TreeItem<>(diagram.getName());
+            // Stocker l'association nom->id dans la map
+            diagramNameToIdMap.put(diagram.getName(), diagram.getId());
             diagramItem.setExpanded(false);
             rootItem.getChildren().add(diagramItem);
         }
@@ -167,18 +178,25 @@ public class MainController {
             if (event.getClickCount() == 2) {
                 TreeItem<String> selectedItem = diagramExplorer.getSelectionModel().getSelectedItem();
                 if (selectedItem != null && selectedItem != rootItem) {
+                    // Récupérer le nom du diagramme et trouver l'ID correspondant
                     String diagramName = selectedItem.getValue();
-                    List<ClassDiagram> selectedDiagrams = diagramService.getAllDiagrams().stream()
-                            .filter(d -> d.getName().equals(diagramName))
-                            .toList();
-
-                    if (!selectedDiagrams.isEmpty()) {
-                        openDiagramInTab(selectedDiagrams.get(0));
+                    Long diagramId = diagramNameToIdMap.get(diagramName);
+                    if (diagramId != null) {
+                        openDiagramWithElementsById(diagramId);
                     }
                 }
             }
         });
     }
+
+    /**
+     * Ouvre un diagramme complet à partir de son ID
+     */
+    private void openDiagramWithElementsById(Long diagramId) {
+        // Utiliser la nouvelle méthode qui charge complètement le diagramme
+        diagramService.getDiagramWithElementsById(diagramId).ifPresent(this::openDiagramInTab);
+    }
+
 
     /**
      * Charge les projets récents dans le menu
@@ -188,16 +206,16 @@ public class MainController {
         recentProjectsMenu.getItems().clear();
 
         // Charger les diagrammes récents
-        List<ClassDiagram> recentDiagrams = diagramService.getRecentDiagrams(10);
+        List<RecentDiagramDTO> recentDiagrams = diagramService.getRecentDiagramDTOs(10);
 
         if (recentDiagrams.isEmpty()) {
             MenuItem emptyItem = new MenuItem("Aucun projet récent");
             emptyItem.setDisable(true);
             recentProjectsMenu.getItems().add(emptyItem);
         } else {
-            for (ClassDiagram diagram : recentDiagrams) {
+            for (RecentDiagramDTO diagram : recentDiagrams) {
                 MenuItem item = new MenuItem(diagram.getName());
-                item.setOnAction(event -> openDiagramInTab(diagram));
+                item.setOnAction(event -> openDiagramById(diagram.getId()));
                 recentProjectsMenu.getItems().add(item);
             }
 
@@ -209,15 +227,32 @@ public class MainController {
     }
 
     /**
+     * Ouvre un diagramme à partir de son ID
+     */
+    private void openDiagramById(Long diagramId) {
+        diagramService.getDiagramById(diagramId).ifPresent(this::openDiagramInTab);
+    }
+
+    /**
      * Efface la liste des projets récents
      */
     private void clearRecentProjects() {
-        // Cette fonctionnalité dépend de l'implémentation
-        // On se contente ici de vider le menu
-        recentProjectsMenu.getItems().clear();
-        MenuItem emptyItem = new MenuItem("Aucun projet récent");
-        emptyItem.setDisable(true);
-        recentProjectsMenu.getItems().add(emptyItem);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Effacer les projets récents");
+        alert.setHeaderText("Effacer la liste des projets récents");
+        alert.setContentText("Êtes-vous sûr de vouloir effacer la liste des projets récents ?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            // Service de projets récents
+            if (diagramService instanceof DiagramServiceImpl) {
+                RecentProjectsService recentProjectsService = ((DiagramServiceImpl) diagramService).getRecentProjectsService();
+                recentProjectsService.clearRecentProjects();
+            }
+
+            // Rafraîchir le menu
+            loadRecentProjects();
+        }
     }
 
     /**

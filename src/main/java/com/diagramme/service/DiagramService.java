@@ -1,5 +1,6 @@
 package com.diagramme.service;
 
+import com.diagramme.dto.RecentDiagramDTO;
 import com.diagramme.model.ClassDiagram;
 import com.diagramme.model.ClassElement;
 import com.diagramme.model.RelationshipElement;
@@ -37,6 +38,11 @@ public interface DiagramService {
      * Récupère les diagrammes récemment modifiés
      */
     List<ClassDiagram> getRecentDiagrams(int limit);
+
+    /**
+     * Récupère les diagrammes récents sous forme de DTOs
+     */
+    List<RecentDiagramDTO> getRecentDiagramDTOs(int limit);
 
     /**
      * Supprime un diagramme
@@ -92,4 +98,16 @@ public interface DiagramService {
      * Optimise la disposition des éléments dans le diagramme
      */
     ClassDiagram optimizeLayout(Long diagramId);
+
+    /**
+     * Convertit un diagramme en DTO
+     */
+    RecentDiagramDTO convertToDTO(ClassDiagram diagram);
+
+    /**
+     * Récupère un diagramme avec tous ses éléments chargés
+     * @param id L'identifiant du diagramme
+     * @return Le diagramme complet avec toutes ses associations
+     */
+    Optional<ClassDiagram> getDiagramWithElementsById(Long id);
 }

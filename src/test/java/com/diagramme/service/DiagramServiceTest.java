@@ -1,5 +1,6 @@
 package com.diagramme.service;
 
+import com.diagramme.dto.RecentDiagramDTO;
 import com.diagramme.model.ClassDiagram;
 import com.diagramme.model.ClassElement;
 import com.diagramme.model.RelationshipElement;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +37,9 @@ public class DiagramServiceTest {
 
     @Mock
     private JavaParserService javaParserService;
+
+    @Mock
+    private RecentProjectsService recentProjectsService;
 
     @InjectMocks
     private DiagramServiceImpl diagramService;
@@ -152,5 +157,45 @@ public class DiagramServiceTest {
 
         // Vérifier que le repository a été appelé une fois
         verify(diagramRepository, times(1)).save(any(ClassDiagram.class));
+    }
+
+    @Test
+    public void testConvertToDTO() {
+        // Préparation du test
+        ClassDiagram diagram = new ClassDiagram("Test Diagram");
+        diagram.setId(1L);
+        diagram.setUuid("test-uuid");
+        diagram.setDescription("Test Description");
+        diagram.setAuthor("Test Author");
+        diagram.setVersion("1.0");
+        diagram.setCreatedAt(LocalDateTime.now());
+        diagram.setModifiedAt(LocalDateTime.now());
+        diagram.setShowGrid(true);
+        diagram.setSnapToGrid(true);
+        diagram.setGridSize(20.0);
+        diagram.setBackgroundColor("#FFFFFF");
+
+        // Création de quelques éléments pour le test
+        ClassElement classElement = new ClassElement("TestClass");
+        diagram.addElement(classElement);
+
+        // Appel de la méthode à tester
+        RecentDiagramDTO dto = diagramService.convertToDTO(diagram);
+
+        // Vérifications
+        assertNotNull(dto);
+        assertEquals(diagram.getId(), dto.getId());
+        assertEquals(diagram.getUuid(), dto.getUuid());
+        assertEquals(diagram.getName(), dto.getName());
+        assertEquals(diagram.getDescription(), dto.getDescription());
+        assertEquals(diagram.getAuthor(), dto.getAuthor());
+        assertEquals(diagram.getVersion(), dto.getVersion());
+        assertEquals(diagram.getCreatedAt(), dto.getCreatedAt());
+        assertEquals(diagram.getModifiedAt(), dto.getModifiedAt());
+        assertEquals(diagram.isShowGrid(), dto.isShowGrid());
+        assertEquals(diagram.isSnapToGrid(), dto.isSnapToGrid());
+        assertEquals(diagram.getGridSize(), dto.getGridSize());
+        assertEquals(diagram.getBackgroundColor(), dto.getBackgroundColor());
+        assertEquals(1, dto.getElementCount());
     }
 }

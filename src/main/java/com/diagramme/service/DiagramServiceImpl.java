@@ -1,5 +1,6 @@
 package com.diagramme.service;
 
+import com.diagramme.dto.RecentDiagramDTO;
 import com.diagramme.model.ClassDiagram;
 import com.diagramme.model.ClassElement;
 import com.diagramme.model.RelationshipElement;
@@ -7,37 +8,48 @@ import com.diagramme.repository.ClassDiagramRepository;
 import com.diagramme.repository.ClassElementRepository;
 import com.diagramme.repository.RelationshipElementRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+
 
 /**
  * Implémentation du service de gestion des diagrammes
  */
 @Service
 @Slf4j
+@Lazy
 public class DiagramServiceImpl implements DiagramService {
 
     private final ClassDiagramRepository diagramRepository;
     private final ClassElementRepository classElementRepository;
     private final RelationshipElementRepository relationshipRepository;
     private final JavaParserService javaParserService;
+    @Getter
+    private final RecentProjectsService recentProjectsService;
 
     @Autowired
     public DiagramServiceImpl(
             ClassDiagramRepository diagramRepository,
             ClassElementRepository classElementRepository,
             RelationshipElementRepository relationshipRepository,
-            JavaParserService javaParserService) {
+            JavaParserService javaParserService,
+            RecentProjectsService recentProjectsService) {
         this.diagramRepository = diagramRepository;
         this.classElementRepository = classElementRepository;
         this.relationshipRepository = relationshipRepository;
         this.javaParserService = javaParserService;
+        this.recentProjectsService = recentProjectsService;
     }
 
     @Override
@@ -251,5 +263,77 @@ public class DiagramServiceImpl implements DiagramService {
         }
 
         return diagramRepository.save(diagram);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecentDiagramDTO> getRecentDiagramDTOs(int limit) {
+        log.debug("Récupération des {} diagrammes récents (DTOs)", limit);
+
+        if (limit <= 0) {
+            return List.of();
+        }
+
+        List<ClassDiagram> diagrams;
+        if (limit <= 10) {
+            diagrams = diagramRepository.findTop10ByOrderByModifiedAtDesc();
+        } else {
+            diagrams = diagramRepository.findAllByOrderByModifiedAtDesc();
+        }
+
+        return diagrams.stream()
+                .limit(limit)
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public RecentDiagramDTO convertToDTO(ClassDiagram diagram) {
+        RecentDiagramDTO dto = new RecentDiagramDTO();
+        dto.setId(diagram.getId());
+        dto.setUuid(diagram.getUuid());
+        dto.setName(diagram.getName());
+        dto.setDescription(diagram.getDescription());
+        dto.setAuthor(diagram.getAuthor());
+        dto.setVersion(diagram.getVersion());
+        dto.setCreatedAt(diagram.getCreatedAt());
+        dto.setModifiedAt(diagram.getModifiedAt());
+        dto.setShowGrid(diagram.isShowGrid());
+        dto.setSnapToGrid(diagram.isSnapToGrid());
+        dto.setGridSize(diagram.getGridSize());
+        dto.setBackgroundColor(diagram.getBackgroundColor());
+
+        // Compter les éléments - ceci fonctionne car nous sommes dans une transaction
+        dto.setElementCount(diagram.getElements().size());
+
+        return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ClassDiagram> getDiagramWithElementsById(Long id) {
+        log.debug("Récupération du diagramme complet avec ID: {}", id);
+
+        Optional<ClassDiagram> diagramOpt = diagramRepository.findById(id);
+
+        diagramOpt.ifPresent(diagram -> {
+            // Initialiser explicitement la collection d'éléments
+            Hibernate.initialize(diagram.getElements());
+
+            // Initialiser les autres relations si nécessaire
+            diagram.getElements().forEach(element -> {
+                if (element instanceof ClassElement classElement) {
+                    Hibernate.initialize(classElement.getAttributes());
+                    Hibernate.initialize(classElement.getMethods());
+
+                    // Initialiser les paramètres des méthodes
+                    classElement.getMethods().forEach(method ->
+                            Hibernate.initialize(method.getParameters())
+                    );
+                }
+            });
+        });
+
+        return diagramOpt;
     }
 }

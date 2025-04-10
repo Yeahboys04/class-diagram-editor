@@ -1,9 +1,12 @@
 package com.diagramme.service;
 
+import com.diagramme.dto.RecentDiagramDTO;
 import com.diagramme.model.ClassDiagram;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -18,16 +21,24 @@ import java.util.stream.Collectors;
 public class RecentProjectsService {
 
     private final PreferenceService preferenceService;
-    private final List<ClassDiagram> recentProjects = new ArrayList<>();
+    private final DiagramService diagramService;
+    private final List<RecentDiagramDTO> recentProjects = new ArrayList<>();
     private final String recentProjectsFilePath;
 
     @Autowired
-    public RecentProjectsService(PreferenceService preferenceService) {
+    public RecentProjectsService(PreferenceService preferenceService, @Lazy DiagramService diagramService) {
         this.preferenceService = preferenceService;
+        this.diagramService = diagramService;
 
         // Chemin du fichier des projets récents
         String appDataPath = System.getProperty("user.home") + File.separator + ".class-diagram-editor";
         recentProjectsFilePath = appDataPath + File.separator + "recent_projects.ser";
+
+        // Créer le répertoire si nécessaire
+        File appDataDir = new File(appDataPath);
+        if (!appDataDir.exists()) {
+            appDataDir.mkdirs();
+        }
 
         // Charger les projets récents
         loadRecentProjects();
@@ -41,7 +52,7 @@ public class RecentProjectsService {
         File file = new File(recentProjectsFilePath);
         if (file.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                List<ClassDiagram> loadedProjects = (List<ClassDiagram>) ois.readObject();
+                List<RecentDiagramDTO> loadedProjects = (List<RecentDiagramDTO>) ois.readObject();
                 recentProjects.clear();
                 recentProjects.addAll(loadedProjects);
                 log.debug("Projets récents chargés: {}", recentProjects.size());
@@ -66,12 +77,16 @@ public class RecentProjectsService {
     /**
      * Ajoute un projet à la liste des projets récents
      */
+    @Transactional(readOnly = true)
     public void addRecentProject(ClassDiagram diagram) {
+        // Convertir le diagramme en DTO
+        RecentDiagramDTO dto = diagramService.convertToDTO(diagram);
+
         // Supprimer le projet s'il existe déjà
-        recentProjects.removeIf(p -> p.getId().equals(diagram.getId()));
+        recentProjects.removeIf(p -> p.getId().equals(dto.getId()));
 
         // Ajouter le projet en tête de liste
-        recentProjects.add(0, diagram);
+        recentProjects.add(0, dto);
 
         // Limiter le nombre de projets récents
         int maxRecentProjects = preferenceService.getRecentProjectsMax();
@@ -86,14 +101,14 @@ public class RecentProjectsService {
     /**
      * Récupère la liste des projets récents
      */
-    public List<ClassDiagram> getRecentProjects() {
+    public List<RecentDiagramDTO> getRecentProjects() {
         return new ArrayList<>(recentProjects);
     }
 
     /**
      * Récupère la liste des projets récents (limitée)
      */
-    public List<ClassDiagram> getRecentProjects(int limit) {
+    public List<RecentDiagramDTO> getRecentProjects(int limit) {
         return recentProjects.stream()
                 .limit(limit)
                 .collect(Collectors.toList());
